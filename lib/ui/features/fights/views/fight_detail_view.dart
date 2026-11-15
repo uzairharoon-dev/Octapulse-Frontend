@@ -80,7 +80,9 @@ class _Matchup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = fight.hasResult
+    final status = fight.isCancelled
+        ? 'Bout cancelled · picks void'
+        : fight.hasResult
         ? '${fight.methodLabel}${fight.resultRound != null ? ' · R${fight.resultRound}' : ''}${fight.resultTime != null ? ' · ${fight.resultTime}' : ''}'
         : fight.locked
             ? 'Live now · picks closed'
@@ -188,6 +190,9 @@ class _MyPickCard extends ConsumerWidget {
       );
     }
     if (pick == null) {
+      if (fight.isCancelled) {
+        return const _InfoLine(icon: Icons.block_rounded, text: 'This bout was cancelled.');
+      }
       if (fight.locked) {
         return const _InfoLine(icon: Icons.lock_rounded, text: "You didn't pick this fight.");
       }
@@ -200,12 +205,14 @@ class _MyPickCard extends ConsumerWidget {
     }
 
     final fighter = fight.fighterById(pick.pickedFighterId);
-    final (label, color) = switch (pick.result) {
-      PickResult.won => ('WON +${pick.points ?? 0}', AppColors.win),
-      PickResult.lost => ('LOST', AppColors.loss),
-      PickResult.voided => ('VOID', AppColors.textMuted),
-      PickResult.pending => (fight.locked ? 'LOCKED' : 'PENDING', AppColors.textSecondary),
-    };
+    final (label, color) = fight.isCancelled
+        ? ('CANCELLED', AppColors.textMuted)
+        : switch (pick.result) {
+            PickResult.won => ('WON +${pick.points ?? 0}', AppColors.win),
+            PickResult.lost => ('LOST', AppColors.loss),
+            PickResult.voided => ('VOID', AppColors.textMuted),
+            PickResult.pending => (fight.locked ? 'LOCKED' : 'PENDING', AppColors.textSecondary),
+          };
     return AppCard(
       borderColor: AppColors.primary.withValues(alpha: 0.5),
       padding: const EdgeInsets.all(14),

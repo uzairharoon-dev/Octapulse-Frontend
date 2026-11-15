@@ -159,8 +159,10 @@ class _PicksBody extends ConsumerWidget {
         ),
       ];
     }
-    final made = event.fights.where((f) => picks.containsKey(f.id)).length;
-    final total = event.fights.length;
+    // Cancelled bouts stay on the list but can't be picked, so they don't count.
+    final active = event.activeFights;
+    final made = active.where((f) => picks.containsKey(f.id)).length;
+    final total = active.length;
 
     return [
       SliverToBoxAdapter(
@@ -309,6 +311,7 @@ class _PickCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = pick;
     final extras = p?.extrasLabel;
+    final cancelled = fight.isCancelled;
     return AppCard(
       onTap: onOpen,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
@@ -331,7 +334,9 @@ class _PickCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (p != null && p.result == PickResult.won)
+                if (cancelled)
+                  const _Tag('CANCELLED', AppColors.textMuted, icon: Icons.block_rounded)
+                else if (p != null && p.result == PickResult.won)
                   _Tag('WON +${p.points ?? 0}', AppColors.win)
                 else if (p != null && p.result == PickResult.lost)
                   const _Tag('LOST', AppColors.loss)
@@ -343,14 +348,25 @@ class _PickCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _side(red, fight.redFighterId)),
-              const SizedBox(width: 10),
-              Expanded(child: _side(blue, fight.blueFighterId)),
-            ],
+          Opacity(
+            opacity: cancelled ? 0.45 : 1,
+            child: Row(
+              children: [
+                Expanded(child: _side(red, fight.redFighterId)),
+                const SizedBox(width: 10),
+                Expanded(child: _side(blue, fight.blueFighterId)),
+              ],
+            ),
           ),
-          if (extras != null || (p != null && !locked))
+          if (cancelled && p != null)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(4, 10, 4, 0),
+              child: Text(
+                'Bout cancelled · your pick is void',
+                style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ),
+          if (!cancelled && (extras != null || (p != null && !locked)))
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
               child: Row(

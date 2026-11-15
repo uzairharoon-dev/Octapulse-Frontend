@@ -45,7 +45,7 @@ class EventDetailView extends ConsumerWidget {
               ),
             ),
             SliverToBoxAdapter(child: _InfoStrip(event: event.summary)),
-            if (!event.summary.isCompleted && event.fights.isNotEmpty)
+            if (!event.summary.isCompleted && event.activeFights.isNotEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
@@ -84,7 +84,7 @@ class EventDetailView extends ConsumerWidget {
                       Text(section.key, style: Theme.of(context).textTheme.titleLarge),
                       const SizedBox(width: 8),
                       Text(
-                        '${section.value.length} fights',
+                        _fightCount(section.value),
                         style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w500),
                       ),
                     ],
@@ -125,6 +125,12 @@ class EventDetailView extends ConsumerWidget {
       ),
     );
   }
+}
+
+String _fightCount(List<Fight> fights) {
+  final cancelled = fights.where((f) => f.isCancelled).length;
+  final active = fights.length - cancelled;
+  return cancelled == 0 ? '$active fights' : '$active fights · $cancelled cancelled';
 }
 
 class _Header extends StatelessWidget {
@@ -281,9 +287,10 @@ class _UpcomingFightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cancelled = fight.isCancelled;
     return AppCard(
       onTap: () => context.push('/fight/${fight.id}'),
-      borderColor: isMainEvent ? AppColors.primary.withValues(alpha: 0.6) : null,
+      borderColor: isMainEvent && !cancelled ? AppColors.primary.withValues(alpha: 0.6) : null,
       child: Column(
         children: [
           Row(
@@ -301,7 +308,9 @@ class _UpcomingFightCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isMainEvent)
+              if (cancelled)
+                const StatusChip('CANCELLED', color: AppColors.textMuted)
+              else if (isMainEvent)
                 const Text(
                   'MAIN EVENT',
                   style: TextStyle(
@@ -314,11 +323,14 @@ class _UpcomingFightCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          FightMatchup(
-            fight: fight,
-            red: red,
-            blue: blue,
-            onFighterTap: (f) => openFighter(context, f),
+          Opacity(
+            opacity: cancelled ? 0.45 : 1,
+            child: FightMatchup(
+              fight: fight,
+              red: red,
+              blue: blue,
+              onFighterTap: (f) => openFighter(context, f),
+            ),
           ),
         ],
       ),

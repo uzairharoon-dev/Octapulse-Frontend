@@ -78,12 +78,15 @@ class PickTile extends ConsumerWidget {
 class PickResultTag extends StatelessWidget {
   const PickResultTag(this.label, this.color, {super.key});
 
-  factory PickResultTag.of(Pick pick, Fight fight) => switch (pick.result) {
-        PickResult.won => PickResultTag('WON +${pick.points ?? 0}', AppColors.win),
-        PickResult.lost => const PickResultTag('LOST', AppColors.loss),
-        PickResult.voided => const PickResultTag('VOID', AppColors.textMuted),
-        PickResult.pending => PickResultTag(fight.locked ? 'LIVE' : 'PENDING', AppColors.textMuted),
-      };
+  factory PickResultTag.of(Pick pick, Fight fight) {
+    if (fight.isCancelled) return const PickResultTag('CANCELLED', AppColors.textMuted);
+    return switch (pick.result) {
+      PickResult.won => PickResultTag('WON +${pick.points ?? 0}', AppColors.win),
+      PickResult.lost => const PickResultTag('LOST', AppColors.loss),
+      PickResult.voided => const PickResultTag('VOID', AppColors.textMuted),
+      PickResult.pending => PickResultTag(fight.locked ? 'LIVE' : 'PENDING', AppColors.textMuted),
+    };
+  }
 
   final String label;
   final Color color;

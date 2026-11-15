@@ -96,7 +96,7 @@ class HomeView extends ConsumerWidget {
                 ),
               ),
       ),
-      if (latest != null && latest.fights.isNotEmpty) ...[
+      if (latest != null && latest.activeFights.isNotEmpty) ...[
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
         SliverToBoxAdapter(
           child: SectionHeader(
@@ -120,10 +120,10 @@ class HomeView extends ConsumerWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: latest.fights.length,
+              itemCount: latest.activeFights.length,
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, i) {
-                final fight = latest.fights[i];
+                final fight = latest.activeFights[i];
                 return SizedBox(
                   width: cardWidth,
                   child: FightResultCard(

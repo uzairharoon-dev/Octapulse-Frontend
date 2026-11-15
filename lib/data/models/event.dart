@@ -50,7 +50,15 @@ class EventDetail {
   final EventSummary summary;
   final List<Fight> fights;
 
-  Fight? get mainEvent => fights.isEmpty ? null : fights.first;
+  /// Fights still on the card; cancelled bouts stay in [fights] but are left out here.
+  List<Fight> get activeFights => fights.where((f) => !f.isCancelled).toList();
+
+  /// Top bout still on the card, else the top bout.
+  Fight? get mainEvent {
+    if (fights.isEmpty) return null;
+    final active = activeFights;
+    return active.isEmpty ? fights.first : active.first;
+  }
 
   /// Fights grouped by card section, keeping the backend's bout order.
   Map<String, List<Fight>> get fightsBySection {

@@ -41,6 +41,9 @@ class Fight {
   final String? resultTime;
   final DateTime? startsAt;
 
+  /// Dropped from the card. Still shown, with a marker; picks on it are void.
+  bool get isCancelled => status == 'cancelled' || status == 'canceled';
+
   bool get hasResult => winnerFighterId != null || status == 'completed';
 
   bool get isDraw => status == 'completed' && winnerFighterId == null;
@@ -60,6 +63,7 @@ class Fight {
 
   /// Short label for the finish: "Decision", "KO/TKO", "Submission"...
   String get methodLabel {
+    if (isCancelled) return 'Cancelled';
     final m = method?.toUpperCase() ?? '';
     if (m.isEmpty) return hasResult ? 'Result' : (locked ? 'Live' : 'Upcoming');
     if (m.contains('DEC')) {
@@ -76,11 +80,12 @@ class Fight {
   }
 
   factory Fight.fromJson(Map<String, dynamic> json) {
+    final status = json['status'] as String? ?? 'scheduled';
     return Fight(
       id: json['id'] as String,
-      status: json['status'] as String? ?? 'scheduled',
+      status: status,
       titleFight: json['titleFight'] as bool? ?? false,
-      locked: json['locked'] as bool? ?? false,
+      locked: (json['locked'] as bool? ?? false) || status == 'cancelled' || status == 'canceled',
       redFighterId: json['redFighterId'] as String?,
       blueFighterId: json['blueFighterId'] as String?,
       redFighter: _fighter(json['redFighter']),
